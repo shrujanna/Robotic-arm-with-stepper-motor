@@ -1,0 +1,95 @@
+#include <IRremote.h>
+#include <Stepper.h>
+#include <Servo.h>
+
+#define IR_RECEIVE_PIN 10
+
+// Motor steps per revolution (depends on your motor; 28BYJ-48 = 2048 for full rotation)
+const int STEPS_PER_REV = 2048;
+Servo myservo;
+int pos = 0;
+int IRSensor = 12;
+
+// Define motor 1 (IN1-IN4 on pins 2-5)
+Stepper motor1(STEPS_PER_REV, 2, 4, 3, 5);
+
+// Define motor 2 (IN1-IN4 on pins 6-9)
+Stepper motor2(STEPS_PER_REV, 6, 8, 7, 9);
+
+uint8_t lastCommand = 0xFF;
+
+unsigned long lastMillis = 0;
+unsigned long interval = 100;  // Check IRSensor every 100ms
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(IRSensor, INPUT); // IR Sensor pin INPUT
+  myservo.attach(11);
+
+  // Set motor speed (RPM)
+  motor1.setSpeed(10);
+  motor2.setSpeed(10);
+
+  // Initialize IR receiver
+  IrReceiver.begin(IR_RECEIVE_PIN, ENABLE_LED_FEEDBACK);
+
+  Serial.println("IR Ready 🚀");
+}
+
+void loop() {
+  // Check if it's time to read the IR sensor
+  if (millis() - lastMillis > interval) {
+    lastMillis = millis();  // Update lastMillis
+    readIRSensor();         // Check IR Sensor
+  }
+
+  // Handle IR remote commands if any
+  handleIRRemote();
+}
+
+void readIRSensor() {
+  int sensorStatus = digitalRead(IRSensor); // Set the GPIO as Input
+  if (sensorStatus == 1) // Check if the pin is high
+  {
+    myservo.write(90);              // Tell servo to go to position 90
+  }
+  else
+  {
+    myservo.write(0);               // Tell servo to go to position 0
+  }
+}
+
+void handleIRRemote() {
+  if (IrReceiver.decode()) {
+    if (IrReceiver.decodedIRData.protocol != UNKNOWN &&
+        IrReceiver.decodedIRData.command != 0x0 &&
+        IrReceiver.decodedIRData.command != lastCommand) {
+      
+      lastCommand = IrReceiver.decodedIRData.command;
+      Serial.print("Command: 0x");
+      Serial.println(lastCommand, HEX);
+
+      // Map your remote buttons
+      switch (lastCommand) {
+        case 0xC1:  // Motor 1 forward
+          motor1.step(256); // 100 steps forward
+          break;
+        case 0x99:  // Motor 1 reverse
+          motor1.step(-256); // 100 steps backward
+          break;
+        case 0xCA:  // Motor 2 forward
+          motor2.step(512);
+          break;
+        case 0xD2:  // Motor 2 reverse
+          motor2.step(-512);
+          break;
+        case 0xCE:
+          break;
+      }
+
+      //delay(200); // debounce / cooldown
+    }
+
+    IrReceiver.resume();
+  }
+}
