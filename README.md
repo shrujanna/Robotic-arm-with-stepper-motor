@@ -3,6 +3,11 @@
 
 This project showcases a simple **robotic arm** built using a **28BYJ-48 stepper motor**, controlled by an **Arduino Nano**, and operated wirelessly using a **TV remote (TSOP sensor)**. An **additional IR sensor** is used to control the **gripper mechanism**, allowing it to pick and place objects based on sensor input.
 
+![WhatsApp Image 2025-07-07 at 20 55 03_ae9c99f8](https://github.com/user-attachments/assets/2557a017-5d29-4b42-829e-386ce08f14ec)
+
+
+
+
 ### Features
 
 * **Wireless control** using standard TV remote via TSOP sensor.
